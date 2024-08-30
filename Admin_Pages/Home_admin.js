@@ -1,22 +1,25 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
 import profileImg from '../Assets/Profile_icon.jpg';
-import POD_1 from '../Assets/POD_1.png';
-import POD_2 from '../Assets/POD_2.png';
-import POD_3 from '../Assets/POD_3.png';
-import POD_4 from '../Assets/POD_4.png';
-import POD_5 from '../Assets/POD_5.png';
-import POD_6 from '../Assets/POD_6.png';
+import noImg from '../Assets/NoImage.jpg';
 import backImg from '../Assets/Text-icon.png';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import GetPods from '../User_Pages/GetPods';
 
 const Home_admin = () => {
   const navigation = useNavigation();
   const [name, setName] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  // const [city, setCity] = useState('');
+  const [token, setToken] = useState();
+  const [ImageFound, setImageFound] = useState();
+  const[images, setImages] = useState([]);
 
   const handleReports = async () => {
     navigation.navigate('Reports');
@@ -31,24 +34,76 @@ const Home_admin = () => {
     setModalVisible(true);
   };
 
-  useEffect(() => {
-    AsyncStorage.getItem('Name').then(reqName => setName(reqName));
-  }, []);
+  useEffect(()=>{
+    const fetchPOD = async()=> {
+      try{
+        // let ReqToken = await AsyncStorage.getItem('jwtToken');
+        // console.log('before get');
+        const response2 = await axios.get(
+          'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/all-pods',
+          {
+            headers: {
+              Validation: `Bearer ${token}`,
+            },
+          }
+        );
+        // console.warn('Response',response2.data.pods);
+        setImages(response2.data.pods);
+      }catch(error){
+        console.warn('Data not found');
+        setImages([]);
+      }
+    };
+    fetchPOD();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
 
-  const images = [
-    { source: POD_1, docket: '123456789' },
-    { source: POD_2, docket: '987654321' },
-    { source: POD_3, docket: '111213141' },
-    { source: POD_4, docket: '121314151' },
-    { source: POD_5, docket: '131415161' },
-    { source: POD_6, docket: '141516171' },
-    { source: POD_1, docket: '123456789' },
-    { source: POD_2, docket: '987654321' },
-    { source: POD_3, docket: '111213141' },
-    { source: POD_4, docket: '121314151' },
-    { source: POD_5, docket: '131415161' },
-    { source: POD_6, docket: '141516171' },
-  ];
+  useEffect(() => {
+    let mainFunction = async () => {
+      const Profile_Fold = '20044000000025795';
+      let reqName = await AsyncStorage.getItem('Name');
+      // let reqCity = await AsyncStorage.getItem('City');
+      let reqProfileImg = await AsyncStorage.getItem('Profile');
+      let ReqToken = await AsyncStorage.getItem('jwtToken');
+      setName(reqName);
+      // setCity(reqCity);
+      // setProfileImage(reqProfileImg);
+      setToken(ReqToken);
+
+      async function fetchImage() {
+        try {
+          const response = await axios.post(
+            'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/showProfileIMG',
+            {
+              'FOLDER_ID': Profile_Fold,
+              'FILE_ID': reqProfileImg, // Use the actual profile image ID
+            },
+            {
+              headers: {
+                Validation: `Bearer ${ReqToken}`,
+              },
+              responseType: 'blob',
+            }
+          );
+
+          // Convert the blob data to a format that can be used in Image component
+          const blob = response.data;
+          const reader = new FileReader();
+          reader.onload = () => {
+            setImageFound(reader.result); // This will be a base64-encoded string
+          };
+          reader.readAsDataURL(blob);
+        } catch (error) {
+          console.error(error);
+          Alert.alert('Something went wrong while fetching Image');
+        }
+      }
+
+      fetchImage();
+    };
+
+    mainFunction();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -62,7 +117,7 @@ const Home_admin = () => {
         <View style={styles.profile}>
           <View style={styles.profileImage}>
             <Image
-              source={profileImg}
+              source={ ImageFound ? {uri: ImageFound} : profileImg }
               style={{ width: '100%', height: '100%' }}
             />
           </View>
@@ -99,15 +154,9 @@ const Home_admin = () => {
           </View>
 
           <View style={styles.podItems}>
-            {images.map((img, index) => (
-              <TouchableOpacity key={index} onPress={() => handleImagePress(img.source)} style={styles.imageContainer}>
-                <Image source={img.source} style={styles.podItem} />
-                <View style={styles.textOverlay}>
-                  <Text style={styles.docketText}>Docket number</Text>
-                  <Text style={styles.docketText}>{img.docket}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+            {images.length ? images.map((img, index) => (
+              <GetPods handleImagePress={handleImagePress} key={index} imgID={img.PODs.FileID} docketNum={img.PODs.DocketID} date={img.PODs.SubmissionDate} />
+            )) : <View style={styles.noDataFound}><Text style={styles.noDataFoundText}>No POD Uploaded yet</Text></View>}
           </View>
         </View>
 
@@ -116,7 +165,7 @@ const Home_admin = () => {
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.modalCloseText}>Close</Text>
             </TouchableOpacity>
-            <Image source={selectedImage} style={styles.modalImage} resizeMode="contain" />
+            <Image source={selectedImage ? {uri: selectedImage} : noImg} style={styles.modalImage} resizeMode="contain" />
           </View>
         </Modal>
       </ScrollView>
@@ -216,32 +265,8 @@ const styles = StyleSheet.create({
   podItems: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  imageContainer: {
-    width: '30%', // Adjusted to fit three items in a row
-    marginBottom: 20,
-    position: 'relative',
-  },
-  podItem: {
-    width: '100%',
-    height: 100,
-    borderRadius: 10,
-  },
-  textOverlay: {
-    position: 'absolute',
-    top: 60,
-    left: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingTop: 2,
-    paddingBottom: 2,
-    paddingLeft: 10,
-    paddingRight: 10,
-    borderRadius: 5,
-  },
-  docketText: {
-    color: '#fff',
-    fontSize: 13,
+    // justifyContent: 'space-evenly',
+    gap: 10,
   },
   modalContainer: {
     flex: 1,
@@ -265,6 +290,15 @@ const styles = StyleSheet.create({
     color: '#242760',
     fontSize: 16,
   },
+  noDataFound: {
+    height: '70%',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataFoundText: {
+    fontSize: 18,
+  },
 });
-
 export default Home_admin;

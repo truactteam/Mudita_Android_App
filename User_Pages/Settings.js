@@ -216,10 +216,10 @@ export default function SettingsPage() {
           <Text style={styles.saveButtonText}>Save changes</Text>
         </TouchableOpacity>
         <View style={styles.saveButton}>
-          <TouchableOpacity style={styles.button2} onPress={handleLogout}>
-              <Text style={styles.saveButtonText}>Log-Out</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.button2} onPress={handleLogout}>
+            <Text style={styles.saveButtonText}>Log-Out</Text>
+        </TouchableOpacity>
+    </View>
       </View>
     </View>
   );

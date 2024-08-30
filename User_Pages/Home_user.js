@@ -2,110 +2,183 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
 import profileImg from '../Assets/Profile_icon.jpg';
-import POD_1 from '../Assets/POD_1.png';
-import POD_2 from '../Assets/POD_2.png';
-import POD_3 from '../Assets/POD_3.png';
-import POD_4 from '../Assets/POD_4.png';
-import POD_5 from '../Assets/POD_5.png';
-import POD_6 from '../Assets/POD_6.png';
 import backImg from '../Assets/Text-icon.png';
-import MyTabs from './Bottom_bar2';
+import noImg from '../Assets/NoImage.jpg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import GetPods from './GetPods';
+
 
 const Home_user = () => {
 
     let navigation = useNavigation();
     const[name, setName] = useState('');
+    const[images2, setImages2] = useState([]);
+    const [city, setCity] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    // const [profileImage, setProfileImage] = useState();
+    const [ImageFound, setImageFound] = useState();
+    const [token, setToken] = useState();
+    // const handleLogout = async()=>{
+    //     await AsyncStorage.setItem('jwtToken', '');
+    //     await AsyncStorage.setItem('userRole', '');
+    //     await AsyncStorage.setItem('Name', '');
+    //     await AsyncStorage.setItem('user', '');
+    //     navigation.replace('Login');
+    // };
 
-    const handleLogout = async()=>{
-        await AsyncStorage.setItem('jwtToken', '');
-        await AsyncStorage.setItem('userRole', '');
-        navigation.replace('Login');
+    const handleSeeReports = ()=>{
+      navigation.navigate('SeeRecordsUser');
     };
 
-    useEffect(()=>{
-        let reqName = AsyncStorage.getItem('Name');
+    // const handleEditProfile = ()=>{
+    //   navigation.navigate('EditProfileUser');
+    // };
+
+    useEffect(() => {
+      let mainFunction = async () => {
+        const Profile_Fold = '20044000000025795';
+        let reqName = await AsyncStorage.getItem('Name');
+        let reqCity = await AsyncStorage.getItem('City');
+        let reqProfileImg = await AsyncStorage.getItem('Profile');
+        let ReqToken = await AsyncStorage.getItem('jwtToken');
         setName(reqName);
+        setCity(reqCity);
+        // setProfileImage(reqProfileImg);
+        setToken(ReqToken);
+
+        async function fetchImage() {
+          try {
+            const response = await axios.post(
+              'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/showProfileIMG',
+              {
+                'FOLDER_ID': Profile_Fold,
+                'FILE_ID': reqProfileImg, // Use the actual profile image ID
+              },
+              {
+                headers: {
+                  Validation: `Bearer ${ReqToken}`,
+                },
+                responseType: 'blob',
+              }
+            );
+
+            // Convert the blob data to a format that can be used in Image component
+            const blob = response.data;
+            const reader = new FileReader();
+            reader.onload = () => {
+              setImageFound(reader.result); // This will be a base64-encoded string
+            };
+            reader.readAsDataURL(blob);
+          } catch (error) {
+            // console.error(error);
+            // Alert.alert('Something went wrong while fetching Image');
+          }
+        }
+
+        fetchImage();
+      };
+
+      mainFunction();
+    }, []);
+
+    useEffect(()=>{
+      const fetchPOD = async()=> {
+        try{
+          // let ReqToken = await AsyncStorage.getItem('jwtToken');
+          // console.log('before get');
+          const response2 = await axios.get(
+            'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/getPods',
+            {
+              headers: {
+                Validation: `Bearer ${token}`,
+              },
+            }
+          );
+          // console.warn('Response',response2.data.pods);
+          setImages2(response2.data.pods);
+        }catch(error){
+          // console.warn('Data not found');
+          setImages2([]);
+        }
+      };
+      fetchPOD();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
+
+    const handleImagePress = (imageSource) => {
+      setSelectedImage(imageSource);
+      setModalVisible(true);
+    };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Image
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Image
             source={backImg}
             style={{ width: '100%', height: '100%' }}
-        />
-      </View>
-      <View style={styles.profile}>
-        <View style={styles.profileImage}>
-          <Image
-            source={profileImg}
-            style={{ width: '100%', height: '100%' }}
           />
         </View>
-        <Text style={styles.profileName}>Mudita</Text>
-        <Text style={styles.profileText}>{name}</Text>
-        <Text style={styles.profileText}>Gurgaon, Delhi</Text>
-        <View style={styles.stats}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>122</Text>
-            <Text style={styles.statLabel}>Month</Text>
+        <View style={styles.profile}>
+          <View style={styles.profileImage}>
+            <Image
+              source={ ImageFound ? {uri: ImageFound} : profileImg }
+              style={{ width: '100%', height: '100%' }}
+            />
           </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>67</Text>
-            <Text style={styles.statLabel}>Week</Text>
+          <Text style={styles.profileName}>Mudita</Text>
+          <Text style={styles.profileText}>{name}</Text>
+          <Text style={styles.profileText}>{city}</Text>
+          <View style={styles.stats}>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>122</Text>
+              <Text style={styles.statLabel}>Month</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>67</Text>
+              <Text style={styles.statLabel}>Week</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>10</Text>
+              <Text style={styles.statLabel}>Day</Text>
+            </View>
           </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>10</Text>
-            <Text style={styles.statLabel}>Day</Text>
+          <View style={styles.buttons}>
+            {/* <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
+              <Text style={styles.buttonText}>Edit Profile</Text>
+            </TouchableOpacity> */}
+            <TouchableOpacity style={styles.button2} onPress={handleSeeReports}>
+              <Text style={styles.buttonText}>See all Reports</Text>
+            </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.buttons}>
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Associates</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleLogout}>
-            <Text style={styles.buttonText}>Log-Out</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.podContainer}>
-        <View style={{ borderBottomWidth: 1, borderColor: '#242760' }}>
+
+        <View style={styles.podContainer}>
+          <View style={{ borderBottomWidth: 1, borderColor: '#242760', marginBottom: 20}}>
             <Text style={styles.podTitle}>Recently Uploaded POD</Text>
+          </View>
+
+          <View style={styles.podItems}>
+            {images2.length ? images2.map((img, index) => (
+              <GetPods handleImagePress={handleImagePress} key={index} imgID={img.PODs.FileID} docketNum={img.PODs.DocketID} date={img.PODs.SubmissionDate} />
+            )) : <View style={styles.noDataFound}><Text style={styles.noDataFoundText}>No POD Uploaded yet</Text></View>}
+          </View>
         </View>
-        <View style={styles.podItems}>
-          <Image
-            source={POD_1} // Replace with your image
-            style={styles.podItem}
-          />
-          <Image
-            source={POD_2} // Replace with your image
-            style={styles.podItem}
-          />
-          <Image
-            source={POD_3} // Replace with your image
-            style={styles.podItem}
-          />
-        </View>
-        <View style={styles.podItems}>
-          <Image
-            source={POD_4} // Replace with your image
-            style={styles.podItem}
-          />
-          <Image
-            source={POD_5} // Replace with your image
-            style={styles.podItem}
-          />
-          <Image
-            source={POD_6} // Replace with your image
-            style={styles.podItem}
-          />
-        </View>
-      </View>
-      <MyTabs color="#242760" size="24"/>
+
+        <Modal visible={modalVisible} transparent={true} animationType="fade">
+          <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+            <Image source={selectedImage ? {uri: selectedImage} : noImg} style={styles.modalImage} resizeMode="contain" />
+          </View>
+        </Modal>
+      </ScrollView>
     </View>
   );
 };
@@ -115,17 +188,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  scrollContent: {
+    paddingBottom: 60,
+  },
   header: {
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#f0f0f0',
     height: 120,
-    width:'100%',
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ff6600',
+    width: '100%',
   },
   profile: {
     padding: 20,
@@ -152,7 +223,7 @@ const styles = StyleSheet.create({
   stats: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 60,
+    gap: 40,
     marginBottom: 20,
   },
   stat: {
@@ -175,14 +246,23 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
   },
+  button2: {
+    backgroundColor: '#242760',
+    marginLeft: 16,
+    paddingLeft: 12,
+    paddingRight: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
+    borderRadius: 8,
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
   podContainer: {
-    paddingLeft: 10,
-    paddingRight: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
     paddingTop: 8,
   },
   podTitle: {
@@ -194,12 +274,41 @@ const styles = StyleSheet.create({
   },
   podItems: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    flexWrap: 'wrap',
+    // justifyContent: 'space-evenly',
+    gap: 10,
   },
-  podItem: {
-    width: '30%',
-    height: 100,
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '90%',
+    height: '75%',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 30,
+    right: 20,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+  },
+  modalCloseText: {
+    color: '#242760',
+    fontSize: 16,
+  },
+  noDataFound: {
+    height: '70%',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataFoundText: {
+    fontSize: 18,
   },
 });
 

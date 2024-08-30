@@ -4,33 +4,37 @@
 /* eslint-disable prettier/prettier */
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Add_user from './AddPOD';
+import User_Home from './Home_user';
+// import Settings from './AddPOD';
+import UploadPOD from './AddPOD';
+import Settings from './Settings';
 
 const Tab = createBottomTabNavigator();
 
 function MyTabs() {
     return (
       <Tab.Navigator
-        initialRouteName="Feed"
+        initialRouteName="Home"
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => {
+          tabBarIcon: ({ color }) => {
             let iconName;
             if (route.name === 'Home') {
+              iconName = 'home';
+            } else if (route.name === 'Add POD') {
               iconName = 'plus-circle';
-            } else if (route.name === 'Updates') {
-              iconName = 'plus-circle';
-            } else if (route.name === 'Profile') {
-              iconName = 'plus-circle';
+            } else if (route.name === 'Settings_user') {
+              iconName = 'cog-outline';
             }
-            return <MaterialCommunityIcons name={iconName} color={color || '#262760'} size={size || 24} />;
+            return <MaterialCommunityIcons name={iconName} color={color} size={28} />;
           },
           tabBarActiveTintColor: '#e91e63',
           tabBarInactiveTintColor: 'gray',
+          headerShown: false,
         })}
       >
-        <Tab.Screen name="Home" component={Add_user} />
-        <Tab.Screen name="Updates" component={Add_user} />
-        <Tab.Screen name="Profile" component={Add_user} />
+        <Tab.Screen name="Home" component={User_Home} />
+        <Tab.Screen name="Add POD" component={UploadPOD} />
+        <Tab.Screen name="Settings_user" component={Settings} />
       </Tab.Navigator>
     );
   }
