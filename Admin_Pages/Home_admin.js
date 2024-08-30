@@ -1,8 +1,6 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable react-native/no-inline-styles */
-/* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import profileImg from '../Assets/Profile_icon.jpg';
 import POD_1 from '../Assets/POD_1.png';
 import POD_2 from '../Assets/POD_2.png';
@@ -11,29 +9,46 @@ import POD_4 from '../Assets/POD_4.png';
 import POD_5 from '../Assets/POD_5.png';
 import POD_6 from '../Assets/POD_6.png';
 import backImg from '../Assets/Text-icon.png';
-import MyTabs from './Bottom_bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
 const Home_admin = () => {
-
-  let navigation = useNavigation();
+  const navigation = useNavigation();
   const [name, setName] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  const handleLogout = async () => {
-    await AsyncStorage.setItem('jwtToken', '');
-    await AsyncStorage.setItem('userRole', '');
-
-    navigation.replace('Login');
+  const handleReports = async () => {
+    navigation.navigate('Reports');
   };
 
-  const handleAssociate = ()=>{
+  const handleAssociate = () => {
     navigation.navigate('Associate_page');
+  };
+
+  const handleImagePress = (imageSource) => {
+    setSelectedImage(imageSource);
+    setModalVisible(true);
   };
 
   useEffect(() => {
     AsyncStorage.getItem('Name').then(reqName => setName(reqName));
   }, []);
+
+  const images = [
+    { source: POD_1, docket: '123456789' },
+    { source: POD_2, docket: '987654321' },
+    { source: POD_3, docket: '111213141' },
+    { source: POD_4, docket: '121314151' },
+    { source: POD_5, docket: '131415161' },
+    { source: POD_6, docket: '141516171' },
+    { source: POD_1, docket: '123456789' },
+    { source: POD_2, docket: '987654321' },
+    { source: POD_3, docket: '111213141' },
+    { source: POD_4, docket: '121314151' },
+    { source: POD_5, docket: '131415161' },
+    { source: POD_6, docket: '141516171' },
+  ];
 
   return (
     <View style={styles.container}>
@@ -72,127 +87,39 @@ const Home_admin = () => {
             <TouchableOpacity style={styles.button} onPress={handleAssociate}>
               <Text style={styles.buttonText}>Associates</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button2} onPress={handleLogout}>
-              <Text style={styles.buttonText}>Log-Out</Text>
+            <TouchableOpacity style={styles.button2} onPress={handleReports}>
+              <Text style={styles.buttonText}>Reports</Text>
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.podContainer}>
 
-          <View style={{ borderBottomWidth: 1, borderColor: '#242760' }}>
+        <View style={styles.podContainer}>
+          <View style={{ borderBottomWidth: 1, borderColor: '#242760', marginBottom: 20}}>
             <Text style={styles.podTitle}>Recently Uploaded POD</Text>
           </View>
 
           <View style={styles.podItems}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_1}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_2}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_3}
-                style={styles.podItem}
-              />
-            </View>
+            {images.map((img, index) => (
+              <TouchableOpacity key={index} onPress={() => handleImagePress(img.source)} style={styles.imageContainer}>
+                <Image source={img.source} style={styles.podItem} />
+                <View style={styles.textOverlay}>
+                  <Text style={styles.docketText}>Docket number</Text>
+                  <Text style={styles.docketText}>{img.docket}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
-
-          <View style={styles.podItems}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_4}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_5}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_6}
-                style={styles.podItem}
-              />
-            </View>
-          </View>
-
-          <View style={styles.podItems}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_4}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_5}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_6}
-                style={styles.podItem}
-              />
-            </View>
-          </View>
-
-          <View style={styles.podItems}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_4}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_5}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_6}
-                style={styles.podItem}
-              />
-            </View>
-          </View>
-
-          <View style={styles.podItems}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_4}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_5}
-                style={styles.podItem}
-              />
-            </View>
-            <View style={styles.imageContainer}>
-              <Image
-                source={POD_6}
-                style={styles.podItem}
-              />
-            </View>
-          </View>
-
         </View>
+
+        <Modal visible={modalVisible} transparent={true} animationType="fade">
+          <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+            <Image source={selectedImage} style={styles.modalImage} resizeMode="contain" />
+          </View>
+        </Modal>
       </ScrollView>
-      <View style={styles.tabContainer}>
-        <MyTabs color="blue" size="24" />
-      </View>
     </View>
   );
 };
@@ -203,13 +130,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   scrollContent: {
-    paddingBottom: 60, // Ensure some padding at the bottom
-  },
-  tabContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    paddingBottom: 60,
   },
   header: {
     alignItems: 'center',
@@ -294,22 +215,55 @@ const styles = StyleSheet.create({
   },
   podItems: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginTop: 20,
+  },
+  imageContainer: {
+    width: '30%', // Adjusted to fit three items in a row
+    marginBottom: 20,
+    position: 'relative',
   },
   podItem: {
     width: '100%',
     height: 100,
-  },
-  imageContainer: {
-    width: '30%',
     borderRadius: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
+  },
+  textOverlay: {
+    position: 'absolute',
+    top: 60,
+    left: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingTop: 2,
+    paddingBottom: 2,
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderRadius: 5,
+  },
+  docketText: {
+    color: '#fff',
+    fontSize: 13,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '90%',
+    height: '75%',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 30,
+    right: 20,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+  },
+  modalCloseText: {
+    color: '#242760',
+    fontSize: 16,
   },
 });
 

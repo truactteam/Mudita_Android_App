@@ -1,4 +1,6 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable no-alert */
+/* eslint-disable prettier/prettier */
 import React, { useState } from 'react';
 import { Button, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import img from '../Assets/Text-icon.png';
@@ -9,58 +11,61 @@ import {useNavigation} from '@react-navigation/native';
 import Spinner from 'react-native-loading-spinner-overlay';
 
 
-const Login = () => {
+
+const ForgetPassword = () => {
     const [userMob, setUserMob] = useState('');
+    const [otp, setOTP] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [hide,setHide] = useState(true);
+    // const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [mobValue, setMobValue] = useState(false);
-    const [passValue, setPassValue] = useState(false);
+    // const [mobValue, setMobValue] = useState(false);
+    // const [passValue, setPassValue] = useState(false);
 
     let navigation = useNavigation();
 
-    const handleLogin = async () => {
-      if(!mobValue || !passValue){
-        setMobValue(true);
-        setPassValue(true);
-        return;
-      }
-      setLoading(true);
-      try {
-        const response = await axios.post(
-          'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/login',
-          {
-            Mobile: userMob,
-            password: password,
-          },
-        );
-
-        const {token, user} = response.data;
-        // console.warn(response.data);
-        let role = user[0].Users.Role;
-        // Store the token and role in AsyncStorage
-        await AsyncStorage.setItem('jwtToken', token);
-        await AsyncStorage.setItem('userRole', role);
-        await AsyncStorage.setItem('Name', user[0].Users.Name);
-
-        // Navigate based on the user role
-        if (role === 'Admin') {
-          navigation.replace('AdminHome');
-        } else if (role === 'user') {
-          navigation.replace('UserHome');
-        } else {
-          setError('Unknown role');
+    const handleOTP = async()=>{
+        setHide(false);
+        try{
+            await axios.post(
+                'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/send-otp',
+                {
+                  phoneNumber: userMob,
+                }
+              );
+        }catch{
+            alert('Something went wrong Please try after sometime');
         }
-        setLoading(false);
-      } catch (err) {
-        setError('Invalid credentials');
-        console.warn(err);
-        setLoading(false);
-      }
     };
 
-    const handleForgetPass = ()=>{
-      navigation.navigate('ForgetPass');
+    const handleSubmit = async()=> {
+        if(!userMob || !otp){
+            return alert('Please Enter all details');
+        }
+        if(userMob.split('').length !== 10){
+            return alert('Please enter the 10 digit number');
+        }
+        setLoading(true);
+        const token = await AsyncStorage.getItem('jwtToken');
+        try {
+                await axios.post(
+                'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/change-password',
+                {
+                    phoneNumber: userMob,
+                    otp: otp,
+                    newPassword: password,
+                },
+                {
+                    headers: {
+                    Validation: `Bearer ${token}`,
+                    },
+                }
+                );
+                navigation.replace('Login');
+            }catch (error) {
+                alert('Something went wrong Please try after sometime');
+                setLoading(false);
+            }
     };
 
     if (loading) {
@@ -88,25 +93,32 @@ const Login = () => {
                     value={userMob}
                     onChangeText={setUserMob}
                     style={styles.input}
+                    keyboardType="numeric"
                 />
+                {!hide ? (
+                    <TextInput
+                        placeholder="New Password"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                        style={styles.input2}
+                    />
+                ) : null
+                }
                 {/* <Text style={{color: "red", textAlign: 'left'}}>Please fill the Mobile Number</Text> */}
                 <TextInput
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
+                    placeholder="OTP"
+                    value={otp}
+                    onChangeText={setOTP}
                     style={styles.input2}
+                    keyboardType="numeric"
                 />
-                <View style={styles.touchContainer}>
-                  <TouchableOpacity onPress={handleForgetPass}>
-                    <Text style={styles.touch}>Forget Password</Text>
-                  </TouchableOpacity>
-                </View>
                 {/* {error ? <Text style={styles.error}>{error}</Text> : null} */}
                 <View style={styles.buttonContainer}>
                     {/* <Button title="Login" /> */}
-                    {error ? <Text style={styles.error}>{error}</Text> : null}
-                    <Button title="Login" onPress={handleLogin} />
+                    {/* {error ? <Text style={styles.error}>{error}</Text> : null} */}
+                    <Button title="Send OTP" onPress={handleOTP} />
+                    <Button title="Submit" onPress={handleSubmit} />
                 </View>
                 <Image
                     source={img2} // Replace with your image URL or local image reference
@@ -165,7 +177,12 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     buttonContainer: {
-        width: '20%',
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 20,
+        width: '60%',
         borderRadius: 8,
         overflow: 'hidden',
     },
@@ -178,4 +195,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Login;
+export default ForgetPassword;
