@@ -156,6 +156,7 @@ export default function UploadPOD({ navigation }) {
             <TextInput
                 style={styles.input}
                 value={scannedData}
+                onChange={(e)=>setScannedData(e)}
                 placeholder="Scan QR code here"
                 keyboardType="numeric"
             />

@@ -2,7 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Modal, Alert, RefreshControl } from 'react-native';
 import profileImg from '../Assets/Profile_icon.jpg';
 import noImg from '../Assets/NoImage.jpg';
 import backImg from '../Assets/Text-icon.png';
@@ -19,7 +19,70 @@ const Home_admin = () => {
   // const [city, setCity] = useState('');
   const [token, setToken] = useState();
   const [ImageFound, setImageFound] = useState();
-  const[images, setImages] = useState([]);
+  const [images, setImages] = useState([]);
+  const [monthCount, setMonthCount] = useState(0);
+  const [dayCount, setDayCount] = useState(0);
+  const [weekCount, setWeekCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchPOD = async()=> {
+    try{
+      setDayCount(0);
+      setMonthCount(0);
+      setWeekCount(0);
+      let ReqToken = await AsyncStorage.getItem('jwtToken');
+      // console.log('before get');
+      const response2 = await axios.get(
+        'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/all-pods',
+        {
+          headers: {
+            Validation: `Bearer ${ReqToken}`,
+          },
+        }
+      );
+      // console.warn('Response',response2.data.pods);
+      setImages(response2.data.pods.reverse());
+
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+      const endOfWeek = new Date(today.setDate(today.getDate() + 6 - today.getDay()));
+      // console.log(currentMonth, currentYear);
+      response2.data.pods.forEach((obj) => {
+          // Convert the string date to a Date object
+          const [day, month, year] = obj.PODs.SubmissionDate.split('/').map(Number);
+          const date = new Date(year, month - 1, day);
+
+          // Check if the date is in the current month and year
+          if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+              setMonthCount(prev => prev + 1);
+          }
+
+          // Check if the date is today
+          if (date.toDateString() === new Date().toDateString()) {
+              setDayCount(prev => prev + 1);
+          }
+
+          // Check if the date is within the current week (Mon-Sun)
+          if (date >= startOfWeek && date <= endOfWeek) {
+              setWeekCount(prev => prev + 1);
+          }
+      });
+    }catch(error){
+      console.warn('Data not found');
+      setImages([]);
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(()=>{fetchPOD();},[]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchPOD();
+    setRefreshing(false);
+  };
 
   const handleReports = async () => {
     navigation.navigate('Reports');
@@ -33,30 +96,6 @@ const Home_admin = () => {
     setSelectedImage(imageSource);
     setModalVisible(true);
   };
-
-  useEffect(()=>{
-    const fetchPOD = async()=> {
-      try{
-        // let ReqToken = await AsyncStorage.getItem('jwtToken');
-        // console.log('before get');
-        const response2 = await axios.get(
-          'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/all-pods',
-          {
-            headers: {
-              Validation: `Bearer ${token}`,
-            },
-          }
-        );
-        // console.warn('Response',response2.data.pods);
-        setImages(response2.data.pods);
-      }catch(error){
-        console.warn('Data not found');
-        setImages([]);
-      }
-    };
-    fetchPOD();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
 
   useEffect(() => {
     let mainFunction = async () => {
@@ -94,7 +133,6 @@ const Home_admin = () => {
           };
           reader.readAsDataURL(blob);
         } catch (error) {
-          console.error(error);
           Alert.alert('Something went wrong while fetching Image');
         }
       }
@@ -107,7 +145,15 @@ const Home_admin = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        }
+      >
         <View style={styles.header}>
           <Image
             source={backImg}
@@ -116,25 +162,27 @@ const Home_admin = () => {
         </View>
         <View style={styles.profile}>
           <View style={styles.profileImage}>
-            <Image
-              source={ ImageFound ? {uri: ImageFound} : profileImg }
-              style={{ width: '100%', height: '100%' }}
-            />
+            <TouchableOpacity onPress={() => handleImagePress(ImageFound ? ImageFound : null)} style={styles.imageContainer}>
+              <Image
+                source={ ImageFound ? {uri: ImageFound} : profileImg }
+                style={{ width: '100%', height: '100%' }}
+              />
+            </TouchableOpacity>
           </View>
           <Text style={styles.profileName}>Admin</Text>
           <Text style={styles.profileText}>{name}</Text>
           <Text style={styles.profileText}>Total POD</Text>
           <View style={styles.stats}>
             <View style={styles.stat}>
-              <Text style={styles.statValue}>122</Text>
+              <Text style={styles.statValue}>{monthCount}</Text>
               <Text style={styles.statLabel}>Month</Text>
             </View>
             <View style={styles.stat}>
-              <Text style={styles.statValue}>67</Text>
+              <Text style={styles.statValue}>{weekCount}</Text>
               <Text style={styles.statLabel}>Week</Text>
             </View>
             <View style={styles.stat}>
-              <Text style={styles.statValue}>10</Text>
+              <Text style={styles.statValue}>{dayCount}</Text>
               <Text style={styles.statLabel}>Day</Text>
             </View>
           </View>

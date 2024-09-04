@@ -9,7 +9,7 @@ import noImg from '../Assets/NoImage.jpg';
 const GetPods = ({handleImagePress, imgID, docketNum, date}) => {
     const img = { source: POD_1, docket: '123456789' };
     const [ImageFound, setImageFound] = useState();
-    console.log(imgID);
+    // console.log(imgID);
 
     useEffect(() => {
         let mainFunction = async () => {

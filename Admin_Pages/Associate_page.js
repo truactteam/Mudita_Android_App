@@ -1,22 +1,57 @@
 /* eslint-disable prettier/prettier */
-import React, { useCallback, useState } from 'react';
-import {FlatList, View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {FlatList, View, Text, Image, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Spinner from 'react-native-loading-spinner-overlay';
 
-const AssociateItem = ({name, location, status, statusColor, onPress}) => (
-  <TouchableOpacity onPress={onPress} style={styles.itemContainer}>
-    <Image source={{uri: 'https://via.placeholder.com/50'}} style={styles.avatar} />
-    <View style={styles.textContainer}>
-      <Text style={styles.name}>{name}</Text>
-      <Text style={styles.location}>{location}</Text>
-      <Text style={[styles.status, {color: statusColor}]}>{status}</Text>
-    </View>
-  </TouchableOpacity>
-);
+const AssociateItem = ({name, location, status, statusColor, onPress, pic}) => {
+  const [ImageFound, setImageFound] = useState();
+  useEffect(()=>{
+    async function fetchImage() {
+      try {
+        const Profile_Fold = '20044000000025795';
+        let ReqToken = await AsyncStorage.getItem('jwtToken');
+        const response = await axios.post(
+          'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/showProfileIMG',
+          {
+            'FOLDER_ID': Profile_Fold,
+            'FILE_ID': pic,
+          },
+          {
+            headers: {
+              Validation: `Bearer ${ReqToken}`,
+            },
+            responseType: 'blob',
+          }
+        );
+
+        const blob = response.data;
+        const reader = new FileReader();
+        reader.onload = () => {
+          setImageFound(reader.result);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        // Alert.alert('Something went wrong while fetching Image');
+      }
+    }
+    fetchImage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+  return(
+    <TouchableOpacity onPress={onPress} style={styles.itemContainer}>
+      <Image source={{uri: ImageFound ? ImageFound : 'https://via.placeholder.com/50'}} style={styles.avatar} />
+      <View style={styles.textContainer}>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.location}>{location}</Text>
+        <Text style={[styles.status, {color: statusColor}]}>{status}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 export default function Associate_page() {
   const [associates, setAssociate] = useState([]);
@@ -90,6 +125,7 @@ export default function Associate_page() {
                 status={item.Status}
                 statusColor={item.Status === 'Active' ? 'green' : 'red'}
                 onPress={() => navigation.navigate('AssociateDetails', { associate: item })}
+                pic={item.Profile_pic}
               />
             ) : null
           )}

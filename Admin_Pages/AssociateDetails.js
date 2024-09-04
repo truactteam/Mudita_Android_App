@@ -1,14 +1,17 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable prettier/prettier */
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, Button, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, Alert } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AssociateDetails({ route, navigation }) {
   const { associate } = route.params;
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [status, setStatus] = useState(associate.Status);
+  const [ImageFound, setImageFound] = useState();
+  const [podsUploaded, setPodsUploaded] = useState([]);
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -36,16 +39,73 @@ export default function AssociateDetails({ route, navigation }) {
     // console.warn('Working');
   };
 
+  useEffect(()=>{
+    async function fetchImage() {
+      try {
+        const Profile_Fold = '20044000000025795';
+        let ReqToken = await AsyncStorage.getItem('jwtToken');
+        const response = await axios.post(
+          'https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/showProfileIMG',
+          {
+            'FOLDER_ID': Profile_Fold,
+            'FILE_ID': associate.Profile_pic,
+          },
+          {
+            headers: {
+              Validation: `Bearer ${ReqToken}`,
+            },
+            responseType: 'blob',
+          }
+        );
+
+        const blob = response.data;
+        const reader = new FileReader();
+        reader.onload = () => {
+          setImageFound(reader.result);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        // Alert.alert('Something went wrong while fetching Image');
+      }
+    }
+    fetchImage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
+  useEffect(()=>{
+    const fetchPOD = async()=> {
+      try{
+        let ReqToken = await AsyncStorage.getItem('jwtToken');
+        // console.log('before get');
+        const response2 = await axios.get(
+          `https://testing-mudita-850892791.development.catalystserverless.com/server/testing_mudita_function/user/user-pods?Mobile=${associate.Mobile}`,
+          {
+            headers: {
+              Validation: `Bearer ${ReqToken}`,
+            },
+          }
+        );
+        // console.warn('Response',response2.data.pods);
+        setPodsUploaded(response2.data.pods);
+      }catch(error){
+        // console.warn('Data not found');
+        setPodsUploaded([]);
+      }
+    };
+    fetchPOD();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={{uri: 'https://via.placeholder.com/100'}} style={styles.avatar} />
+        <Image source={{uri: ImageFound ? ImageFound : 'https://via.placeholder.com/100' }} style={styles.avatar} />
         <Text style={styles.name}>{associate.Name}</Text>
         <Text style={styles.location}>{associate.WarehouseCity}</Text>
       </View>
-      <Text style={styles.info}>Joined on : <Text style={styles.info2}>{associate.CREATEDTIME}</Text></Text>
-      <Text style={styles.info}>Total Deliveries Performed : <Text style={styles.info2}>58</Text></Text>
-      <Text style={styles.info}>Total POD Uploaded : <Text style={styles.info2}>51</Text></Text>
+      <Text style={styles.info}>Joined on : <Text style={styles.info2}>{associate.CREATEDTIME.split(' ')[0]}</Text></Text>
+      <Text style={styles.info}>Total Deliveries Performed : <Text style={styles.info2}>{podsUploaded.length}</Text></Text>
+      <Text style={styles.info}>Total POD Uploaded : <Text style={styles.info2}>{podsUploaded.length}</Text></Text>
       <Text style={styles.info}>Last Working Day : <Text style={styles.info2}>15/05/2024</Text></Text>
 
       <TouchableOpacity onPress={toggleModal} style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>

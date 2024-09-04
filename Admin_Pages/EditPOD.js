@@ -68,6 +68,7 @@ const EditPOD = ({ route, navigation }) => {
     <ScrollView>
       <Image source={{uri: img}} style={styles.image}/>
 
+      <Text style={styles.textLable}>Docket No.</Text>
       <TextInput
         style={styles.input}
         placeholder="Docket no."
@@ -76,6 +77,7 @@ const EditPOD = ({ route, navigation }) => {
         keyboardType="numeric"
       />
 
+      <Text style={styles.textLable}>Delivery Date</Text>
       <TextInput
         style={styles.input}
         placeholder="Delivery Date"
@@ -84,6 +86,7 @@ const EditPOD = ({ route, navigation }) => {
         editable={false}
       />
 
+      <Text style={styles.textLable}>Actual Delivery Date</Text>
       <TouchableOpacity onPress={toggleDatePicker} style={{ width: '100%' }}>
         <TextInput
           style={styles.input}
@@ -117,7 +120,7 @@ const EditPOD = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   image: {
     width: '100%',
-    height: 500,
+    height: 450,
     resizeMode: 'contain',
     marginTop: 25,
   },
@@ -127,8 +130,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     margin: 10,
-    marginBottom: 20,
+    marginBottom: 2,
     paddingHorizontal: 10,
+  },
+  textLable: {
+    marginLeft: 12,
+    marginTop: 10,
+    fontSize: 16,
   },
   container2: {
     display: 'flex',
@@ -144,6 +152,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 10,
     alignItems: 'center',
+    marginTop: 20,
   },
   saveButtonText: {
     color: '#fff',

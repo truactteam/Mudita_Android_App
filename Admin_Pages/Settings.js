@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Spinner from 'react-native-loading-spinner-overlay';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 export default function SettingsPage() {
   const [name, setName] = useState('');
@@ -29,7 +29,7 @@ export default function SettingsPage() {
     navigation.replace('Login');
   };
 
-  useEffect(()=>{
+  useFocusEffect(useCallback(()=>{
     const getDetails = async()=>{
       let nameReq = await AsyncStorage.getItem('Name');
       setName(nameReq);
@@ -73,7 +73,7 @@ export default function SettingsPage() {
     }
     fetchImage();
 
-  },[]);
+  },[]));
 
 
   const handleSaveChanges = async () => {
@@ -148,6 +148,7 @@ export default function SettingsPage() {
     } else if (response.errorCode) {
       console.log('ImagePicker Error: ', response.errorMessage || response.errorCode);
     } else if (response.assets && response.assets.length > 0) {
+      setImageFound(response.assets[0].uri);
       setProfileImage(response.assets[0].uri); // Set the selected image URI
     } else {
       console.log('No assets found in the response');

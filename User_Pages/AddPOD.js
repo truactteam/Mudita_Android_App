@@ -44,14 +44,14 @@ export default function AddPOD({ navigation }) {
     setShowQRCodeScanner(false);
   };
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    toggleDatePicker();
-  };
+  // const handleDateChange = (date) => {
+  //   setSelectedDate(date);
+  //   toggleDatePicker();
+  // };
 
-  const toggleDatePicker = () => {
-    setIsDatePickerVisible(!isDatePickerVisible);
-  };
+  // const toggleDatePicker = () => {
+  //   setIsDatePickerVisible(!isDatePickerVisible);
+  // };
 
   const formatDate = (date) => {
     const day = date.getDate();
@@ -164,16 +164,16 @@ export default function AddPOD({ navigation }) {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={toggleDatePicker} style={{ width: '100%' }}>
+          {/* <TouchableOpacity onPress={toggleDatePicker} style={{ width: '100%' }}> */}
             <TextInput
               style={styles.input2}
-              value={formatDate(selectedDate)}
+              value={formatDate(new Date())}
               placeholder="Select Date"
               editable={false}
             />
-          </TouchableOpacity>
+          {/* </TouchableOpacity> */}
 
-          {isDatePickerVisible && (
+          {/* {isDatePickerVisible && (
             <DatePicker
               date={selectedDate}
               onDateChange={handleDateChange}
@@ -181,7 +181,7 @@ export default function AddPOD({ navigation }) {
               mode="date"
               onClose={toggleDatePicker}
             />
-          )}
+          )} */}
 
           <View style={styles.newView}>
             <TouchableOpacity onPress={takePhoto} style={styles.submitButton}>

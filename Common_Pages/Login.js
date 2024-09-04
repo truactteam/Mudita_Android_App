@@ -3,13 +3,13 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable prettier/prettier */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Button, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import img from '../Assets/Text-icon.png';
 import img2 from '../Assets/Vehicle-icon.png';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
+import {CommonActions, useNavigation} from '@react-navigation/native';
 import Spinner from 'react-native-loading-spinner-overlay';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -56,12 +56,22 @@ const Login = () => {
 
         // Navigate based on the user role
         if (role === 'Admin') {
-          navigation.replace('AdminHome');
-        } else if (role === 'user') {
-          navigation.replace('UserHome');
-        } else {
+          navigation.dispatch(
+              CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'AdminHome' }],
+              })
+          );
+      } else if (role === 'user') {
+          navigation.dispatch(
+              CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'UserHome' }],
+              })
+          );
+      } else {
           setError('Unknown role');
-        }
+      }
         setLoading(false);
       } catch (err) {
         setError('Invalid credentials');
@@ -73,6 +83,23 @@ const Login = () => {
     const handleForgetPass = ()=>{
       navigation.navigate('ForgetPass');
     };
+
+    useEffect(() => {
+      const checkLoginStatus = async () => {
+          const token = await AsyncStorage.getItem('jwtToken');
+          const role = await AsyncStorage.getItem('userRole');
+          if (token && role) {
+              if (role === 'Admin') {
+                  navigation.replace('AdminHome');
+              } else if (role === 'user') {
+                  navigation.replace('UserHome');
+              }
+          }
+      };
+      checkLoginStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
 
     if (loading) {
         return (

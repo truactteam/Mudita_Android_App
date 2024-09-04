@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 const GetPodsAdmin = ({ imgID, docketNum, date, imgData}) => {
     const [ImageFound, setImageFound] = useState();
     const navigation = useNavigation();
-    console.log(imgID);
+    // console.log(imgID);
 
     const handleImagePress = (img) => {
       if(ImageFound){
